@@ -335,6 +335,9 @@ int set_cue_handler(const char *path, const char *types, lo_arg ** argv,
     
     cues_set(&de->cues, q, pos);
     
+    /* send OK to xwax-client. TODO: check if deck really exists */
+    osc_send_ok(lo_message_get_source(data), de);
+    
 }
 
 int punch_cue_handler(const char *path, const char *types, lo_arg ** argv,
@@ -353,6 +356,9 @@ int punch_cue_handler(const char *path, const char *types, lo_arg ** argv,
     de = &osc_deck[d];
     
     deck_cue(de, q);
+    
+    /* send OK to xwax-client. TODO: check if deck really exists */
+    osc_send_ok(lo_message_get_source(data), de);
     
 }
 
@@ -375,8 +381,33 @@ int get_status_handler(const char *path, const char *types, lo_arg ** argv,
     
     //printf("%s\n", url);
     
+    osc_send_ok(lo_message_get_source(data), d);
     osc_send_status(a, d);
     
+}
+
+int osc_send_ok(lo_address a, int d)
+{
+    /* send a message to /xwax/cmdstate */
+    if (lo_send(a, "/xwax/cmdstate", "i", 0) == -1) {
+        printf("OSC error %d: %s\n", lo_address_errno(a),
+               lo_address_errstr(a));
+    }
+    printf("osc_send_ok\n");
+    
+    return 0;
+}
+
+int osc_send_error(lo_address a, int d)
+{
+    /* send a message to /xwax/cmdstate */
+    if (lo_send(a, "/xwax/cmdstate", "i", 1) == -1) {
+        printf("OSC error %d: %s\n", lo_address_errno(a),
+               lo_address_errstr(a));
+    }
+    printf("osc_send_error\n");
+    
+    return 0;
 }
 
 int osc_send_status(lo_address a, int d)
@@ -444,6 +475,10 @@ int disconnect_handler(const char *path, const char *types, lo_arg ** argv,
     de = &osc_deck[argv[0]->i];
     pl = &de->player;
     pl->timecode_control = false;
+    
+    /* send OK to xwax-client. TODO: check if deck really exists */
+    osc_send_ok(lo_message_get_source(data), argv[0]->i);
+    
     return 0;
 }
 
@@ -459,6 +494,10 @@ int reconnect_handler(const char *path, const char *types, lo_arg ** argv,
     de = &osc_deck[argv[0]->i];
     pl = &de->player;
     pl->timecode_control = true;
+    
+    /* send OK to xwax-client. TODO: check if deck really exists */
+    osc_send_ok(lo_message_get_source(data), de);
+    
     return 0;
 }
 
@@ -473,6 +512,9 @@ int recue_handler(const char *path, const char *types, lo_arg ** argv,
     de = &osc_deck[argv[0]->i];
     
     deck_recue(de);
+    
+    /* send OK to xwax-client. TODO: check if deck really exists */
+    osc_send_ok(lo_message_get_source(data), de);
 
     return 0;
 }
@@ -528,6 +570,9 @@ int position_handler(const char *path, const char *types, lo_arg ** argv,
     pl = &de->player;
     
     player_seek_to(pl, argv[1]->f);
+    
+    /* send OK to xwax-client. TODO: check if deck really exists */
+    osc_send_ok(lo_message_get_source(data), de);
     
     return 0;
 }

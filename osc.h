@@ -69,6 +69,8 @@ int osc_send_track_load(struct deck *de);
 int osc_send_ppm_block(struct track *tr);
 int osc_send_scale(int scale);
 int osc_send_status(lo_address a, int d);
+int osc_send_error(lo_address a, int d);
+int osc_send_ok(lo_address a, int d);
 
 void osc_start_updater_thread();
 void osc_start_updater();

@@ -44,12 +44,27 @@ int status_handler(const char *path, const char *types, lo_arg ** argv,
     return 0;
 }
 
+int cmdstate_handler(const char *path, const char *types, lo_arg ** argv,
+                int argc, void *data, void *user_data)
+{
+	if (argv[0]->i == 0) {
+        printf("OK\n");
+        done = 1;
+        return 0;
+    }
+    printf("ERROR\n");
+    done = 1;
+    return 1;
+}
+
 void osc_start_server()
 {
     /* start a new server on port 7770 */
     st = lo_server_thread_new("7771", error);
     
     lo_server_thread_add_method(st, "/xwax/status", "isssfffi", status_handler, NULL);
+    
+    lo_server_thread_add_method(st, "/xwax/cmdstate", "i", cmdstate_handler, NULL);
     
     lo_server_thread_start(st);
 }
@@ -85,12 +100,13 @@ int osc_send_load_track(char *server, int d, char *path, char *artist, char *tit
             lo_address_errstr(t));
         return 1;
     }
-    
+    printf("OK\n");
     return 0;
 }
 
 int osc_send_set_cue(char *server, int d, int q, double pos)
 {
+    osc_start_server();
     lo_address t = lo_address_new(server, "7770");
     
     if (lo_send(t, "/xwax/set_cue", "iif", d, q, pos) == -1) {
@@ -98,12 +114,17 @@ int osc_send_set_cue(char *server, int d, int q, double pos)
             lo_address_errstr(t));
         return 1;
     }
+    while (!done) {
+        usleep(1000);
+    }
+    lo_server_thread_free(st);
     
     return 0;
 }
 
 int osc_send_position(char *server, int d, double pos)
 {
+    osc_start_server();
     lo_address t = lo_address_new(server, "7770");
     
     if (lo_send(t, "/xwax/position", "if", d, pos) == -1) {
@@ -111,6 +132,11 @@ int osc_send_position(char *server, int d, double pos)
             lo_address_errstr(t));
         return 1;
     }
+    
+    while (!done) {
+        usleep(1000);
+    }
+    lo_server_thread_free(st);
     
     return 0;
 }
@@ -130,6 +156,7 @@ int osc_send_pitch(char *server, int d, double pitch)
 
 int osc_send_punch_cue(char *server, int d, int q)
 {
+    osc_start_server();
     lo_address t = lo_address_new(server, "7770");
     
     if (lo_send(t, "/xwax/punch_cue", "ii", d, q) == -1) {
@@ -138,11 +165,19 @@ int osc_send_punch_cue(char *server, int d, int q)
         return 1;
     }
     
+    while (!done) {
+        usleep(1000);
+    }
+    lo_server_thread_free(st);
+    
     return 0;
 }
 
 int osc_send_disconnect(char *server, int d)
 {
+
+	osc_start_server();
+
     lo_address t = lo_address_new(server, "7770");
     
     if (lo_send(t, "/xwax/disconnect", "i", d) == -1) {
@@ -151,11 +186,18 @@ int osc_send_disconnect(char *server, int d)
         return 1;
     }
     
+    while (!done) {
+        usleep(1000);
+    }
+
+    lo_server_thread_free(st);
+    
     return 0;
 }
 
 int osc_send_reconnect(char *server, int d)
 {
+    osc_start_server();
     lo_address t = lo_address_new(server, "7770");
     
     if (lo_send(t, "/xwax/reconnect", "i", d) == -1) {
@@ -164,11 +206,17 @@ int osc_send_reconnect(char *server, int d)
         return 1;
     }
     
+    while (!done) {
+        usleep(1000);
+    }
+    lo_server_thread_free(st);
+    
     return 0;
 }
 
 int osc_send_recue(char *server, int d)
 {
+	osc_start_server();
     lo_address t = lo_address_new(server, "7770");
     
     if (lo_send(t, "/xwax/recue", "i", d) == -1) {
@@ -176,6 +224,11 @@ int osc_send_recue(char *server, int d)
             lo_address_errstr(t));
         return 1;
     }
+    
+    while (!done) {
+        usleep(1000);
+    }
+    lo_server_thread_free(st);
     
     return 0;
 }
@@ -191,7 +244,8 @@ static void usage(FILE *fd)
             "xwax-client <server> recue <deck-number>\n"
             "xwax-client <server> disconnect <deck-number>\n"
             "xwax-client <server> reconnect <deck-number>\n"              
-            "xwax-client <server> get_status <deck-number>\n");     
+            "xwax-client <server> get_status <deck-number>\n"
+            "xwax-client <server> position <deck-number> <position>\n");     
 }
 
 int main(int argc, char *argv[])
