@@ -1837,6 +1837,9 @@ int interface_start(struct library *lib, const char *geo)
     if (load_fonts() == -1)
         return -1;
 
+    /* FIXME: forcing 0,0  as long as geometry flag does not work */
+    putenv( "SDL_VIDEO_WINDOW_POS=0,0");
+
     fprintf(stderr, "Launching interface thread...\n");
 
     if (pthread_create(&ph, NULL, launch, NULL)) {
