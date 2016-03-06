@@ -1514,7 +1514,8 @@ static SDL_Surface* set_size(int w, int h, struct rect *r)
 {
     SDL_Surface *surface;
 
-    surface = SDL_SetVideoMode(w, h, 32, SDL_RESIZABLE);
+    /* TODO: make SDL_NOFRAME optional as argument */
+    surface = SDL_SetVideoMode(w, h, 32, SDL_RESIZABLE | SDL_NOFRAME);
     if (surface == NULL) {
         fprintf(stderr, "%s\n", SDL_GetError());
         return NULL;
