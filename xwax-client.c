@@ -93,6 +93,7 @@ int osc_send_get_status(char *server, int d)
 
 int osc_send_load_track(char *server, int d, char *path, char *artist, char *title)
 {
+    osc_start_server();
     lo_address t = lo_address_new(server, "7770");
     
     if (lo_send(t, "/xwax/load_track", "isss", d, path, artist, title) == -1) {
@@ -100,7 +101,13 @@ int osc_send_load_track(char *server, int d, char *path, char *artist, char *tit
             lo_address_errstr(t));
         return 1;
     }
-    printf("OK\n");
+    
+    while (!done) {
+        usleep(1000);
+    }
+
+    lo_server_thread_free(st);
+    
     return 0;
 }
 
@@ -245,7 +252,7 @@ static void usage(FILE *fd)
             "xwax-client <server> disconnect <deck-number>\n"
             "xwax-client <server> reconnect <deck-number>\n"              
             "xwax-client <server> get_status <deck-number>\n"
-            "xwax-client <server> position <deck-number> <position>\n");     
+            "xwax-client <server> position <deck-number> <position>\n");
 }
 
 int main(int argc, char *argv[])

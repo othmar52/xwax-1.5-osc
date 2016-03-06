@@ -311,7 +311,9 @@ int load_track_handler(const char *path, const char *types, lo_arg ** argv,
     }
 
     deck_load(&osc_deck[d], r);
-
+    
+    /* send OK to xwax-client. TODO: check if deck really exists */
+    osc_send_ok(lo_message_get_source(data), d);
 
     return 0;
 }
