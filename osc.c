@@ -429,7 +429,7 @@ int osc_send_status(lo_address a, int d)
     
     if(tr) {
         /* send a message to /xwax/status */
-        if (lo_send(a, "/xwax/status", "isssfffiffff",
+        if (lo_send(a, "/xwax/status", "isssfffif",
                 de->ncontrol,           // deck number (int)
                 path,               // track path (string)
                 de->record->artist,     // artist name (string)
@@ -438,10 +438,7 @@ int osc_send_status(lo_address a, int d)
                 player_get_elapsed(pl),           // player position in seconds (float)
                 pl->pitch,              // player pitch (float)
                 pl->timecode_control,    // timecode activated or not (int)
-                pl->timecoder->speed,	// really playing
-                pl->last_difference,
-                pl->target_position,
-                pl->sync_pitch)
+                pl->sync_pitch)			// should indicate current timecode input
             == -1) {
             printf("OSC error %d: %s\n", lo_address_errno(a),
                    lo_address_errstr(a));

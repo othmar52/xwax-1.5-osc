@@ -30,9 +30,6 @@ int status_handler(const char *path, const char *types, lo_arg ** argv,
             "position: %f\n"
             "pitch: %f\n"
             "timecode_control: %i\n"
-            "timecode_speed: %f\n"
-            "player_diff: %f\n"
-            "player_target_position: %f\n"
             "player_sync_pitch: %f\n",
             argv[0]->i,
             &argv[1]->s,
@@ -42,10 +39,7 @@ int status_handler(const char *path, const char *types, lo_arg ** argv,
             argv[5]->f,
             argv[6]->f,
             argv[7]->i,
-            argv[8]->f,
-            argv[9]->f,
-            argv[10]->f,
-            argv[11]->f);
+            argv[8]->f);
     
     done = 1;
     
@@ -70,7 +64,7 @@ void osc_start_server()
     /* start a new server on port 7770 */
     st = lo_server_thread_new("7771", error);
     
-    lo_server_thread_add_method(st, "/xwax/status", "isssfffiffff", status_handler, NULL);
+    lo_server_thread_add_method(st, "/xwax/status", "isssfffif", status_handler, NULL);
     
     lo_server_thread_add_method(st, "/xwax/cmdstate", "i", cmdstate_handler, NULL);
     
