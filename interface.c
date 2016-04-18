@@ -49,7 +49,7 @@
 /* Font definitions */
 
 #define FONT "DejaVuSans.ttf"
-#define FONT_SIZE 10
+#define FONT_SIZE 16
 #define FONT_SPACE 15
 
 #define EM_FONT "DejaVuSans-Oblique.ttf"
@@ -79,19 +79,19 @@
 
 /* Dimensions in our own screen units */
 
-#define BORDER 12
+#define BORDER 2
 #define SPACER 8
 #define HALF_SPACER 4
 
 #define CURSOR_WIDTH 4
 
-#define PLAYER_HEIGHT 213
-#define OVERVIEW_HEIGHT 16
+#define PLAYER_HEIGHT 200
+#define OVERVIEW_HEIGHT 0
 
 #define LIBRARY_MIN_WIDTH 64
-#define LIBRARY_MIN_HEIGHT 64
+#define LIBRARY_MIN_HEIGHT 0
 
-#define DEFAULT_METER_SCALE 8
+#define DEFAULT_METER_SCALE 9
 
 #define MAX_METER_SCALE 11
 
@@ -104,7 +104,7 @@
 
 #define TOKEN_SPACE 2
 
-#define CLOCKS_WIDTH 160
+#define CLOCKS_WIDTH 135
 
 #define SPINNER_SIZE (CLOCK_FONT_SIZE * 2 - 6)
 #define SCOPE_SIZE (CLOCK_FONT_SIZE * 2 - 6)
@@ -156,7 +156,7 @@ static SDL_Color background_col = {0, 0, 0, 255},
     text_col = {224, 224, 224, 255},
     alert_col = {192, 64, 0, 255},
     ok_col = {32, 128, 3, 255},
-    elapsed_col = {0, 32, 255, 255},
+    elapsed_col = {255, 225, 20, 255},
     cursor_col = {192, 0, 0, 255},
     selected_col = {0, 48, 64, 255},
     detail_col = {128, 128, 128, 255},
@@ -208,7 +208,7 @@ static void time_to_clock(char *buf, char *deci, int t)
     if (neg)
         *buf++ = '-';
 
-    sprintf(buf, "%02d:%02d.", minutes, seconds);
+    sprintf(buf, "%02d:%02d", minutes, seconds);
     sprintf(deci, "%03d", frac);
 }
 
@@ -611,6 +611,7 @@ static void draw_bpm_field(SDL_Surface *surface, const struct rect *rect,
 static void draw_record(SDL_Surface *surface, const struct rect *rect,
                         const struct record *record, struct player *pl)
 {
+	return;
     struct rect artist, title, left, right;
 
     split(*rect, from_top(BIG_FONT_SPACE, 0), &artist, &title);
@@ -647,8 +648,6 @@ static void draw_clock(SDL_Surface *surface, const struct rect *rect, int t,
 
     split(*rect, pixels(from_left(v, 0)), NULL, &sr);
     track_baseline(&sr, clock_font, &sr, deci_font);
-
-    draw_text(surface, &sr, deci, deci_font, col, background_col);
 }
 
 /*
@@ -789,10 +788,10 @@ static void draw_overview(SDL_Surface *surface, const struct rect *rect,
     Uint8 *pixels, *p;
     SDL_Color col;
 
-    x = rect->x;
-    y = rect->y;
-    w = rect->w;
-    h = rect->h;
+    x = CLOCKS_WIDTH;
+    y = SPACER;
+    w = rect->w - CLOCKS_WIDTH - SPINNER_SIZE - SPINNER_SIZE - 5*SPACER;
+    h = SPINNER_SIZE;
 
     pixels = surface->pixels;
     bytes_per_pixel = surface->format->BytesPerPixel;
@@ -840,20 +839,34 @@ static void draw_overview(SDL_Surface *surface, const struct rect *rect,
 
         p = pixels + y * pitch + (x + c) * bytes_per_pixel;
 
-        r = h;
-        while (r > height) {
-            p[0] = col.b >> fade;
-            p[1] = col.g >> fade;
-            p[2] = col.r >> fade;
+        r = (h / 2);
+        while(r) {
+            if(r > (height/2)) {
+                p[0] = col.b >> 2;
+                p[1] = col.g >> 2;
+                p[2] = col.r >> 2;
+            } else {
+                p[0] = col.b;
+                p[1] = col.g;
+                p[2] = col.r;
+            }
+             p += pitch;
+             r--;
+         }
+
+        r = 0;
+        while(r < (h / 2)) {
+            if(r > (height/2)) {
+                p[0] = col.b >> 2;
+                p[1] = col.g >> 2;
+                p[2] = col.r >> 2;
+            } else {
+                p[0] = col.b;
+                p[1] = col.g;
+                p[2] = col.r;
+            }
             p += pitch;
-            r--;
-        }
-        while (r) {
-            p[0] = col.b;
-            p[1] = col.g;
-            p[2] = col.r;
-            p += pitch;
-            r--;
+            r++;
         }
     }
 }
@@ -873,7 +886,7 @@ static void draw_closeup(SDL_Surface *surface, const struct rect *rect,
     x = rect->x;
     y = rect->y;
     w = rect->w;
-    h = rect->h;
+    h = SPINNER_SIZE;
 
     pixels = surface->pixels;
     bytes_per_pixel = surface->format->BytesPerPixel;
@@ -1036,10 +1049,7 @@ static void draw_deck(SDL_Surface *surface, const struct rect *rect,
     position = player_get_elapsed(pl) * t->rate;
 
     split(*rect, from_top(FONT_SPACE + BIG_FONT_SPACE, 0), &track, &rest);
-    if (rest.h < 160)
-        rest = *rect;
-    else
-        draw_record(surface, &track, deck->record, pl);
+    rest = *rect;
 
     split(rest, from_top(CLOCK_FONT_SIZE * 2, SPACER), &top, &lower);
     if (lower.h < 64)
@@ -1048,10 +1058,7 @@ static void draw_deck(SDL_Surface *surface, const struct rect *rect,
         draw_deck_top(surface, &top, pl, t);
 
     split(lower, from_bottom(FONT_SPACE, SPACER), &meters, &status);
-    if (meters.h < 64)
-        meters = lower;
-    else
-        draw_deck_status(surface, &status, deck);
+    meters = lower;
 
     draw_meters(surface, &meters, t, position, meter_scale);
 }
@@ -1669,9 +1676,6 @@ static int interface_main(void)
             continue;
 
         LOCK(surface);
-
-        if (library_update)
-            draw_library(surface, &rlibrary, &selector);
 
         if (status_update)
             draw_status(surface, &rstatus);
