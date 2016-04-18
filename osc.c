@@ -395,7 +395,6 @@ int osc_send_ok(lo_address a, int d)
         printf("OSC error %d: %s\n", lo_address_errno(a),
                lo_address_errstr(a));
     }
-    printf("osc_send_ok\n");
     
     return 0;
 }
@@ -443,7 +442,6 @@ int osc_send_status(lo_address a, int d)
             printf("OSC error %d: %s\n", lo_address_errno(a),
                    lo_address_errstr(a));
         }
-        printf("osc_send_status: sent deck %i status to %s\n", d, lo_address_get_url(a));            
     }
     
     return 0;    
