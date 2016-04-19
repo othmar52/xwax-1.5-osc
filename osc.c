@@ -217,7 +217,9 @@ int osc_start(struct deck *deck, struct library *library)
   
     lo_server_thread_add_method(st, "/xwax/disconnect", "i", disconnect_handler, NULL);    
     
-    lo_server_thread_add_method(st, "/xwax/reconnect", "i", reconnect_handler, NULL);    
+    lo_server_thread_add_method(st, "/xwax/reconnect", "i", reconnect_handler, NULL);
+    
+    lo_server_thread_add_method(st, "/xwax/cycle_timecode", "i", cycle_timecode_handler, NULL);
 
     lo_server_thread_add_method(st, "/xwax/connect", "", connect_handler, NULL);
 
@@ -313,7 +315,7 @@ int load_track_handler(const char *path, const char *types, lo_arg ** argv,
     deck_load(&osc_deck[d], r);
     
     /* send OK to xwax-client. TODO: check if deck really exists */
-    osc_send_ok(lo_message_get_source(data), d);
+    osc_send_ok(lo_message_get_source(data));
 
     return 0;
 }
@@ -338,8 +340,9 @@ int set_cue_handler(const char *path, const char *types, lo_arg ** argv,
     cues_set(&de->cues, q, pos);
     
     /* send OK to xwax-client. TODO: check if deck really exists */
-    osc_send_ok(lo_message_get_source(data), de);
+    osc_send_ok(lo_message_get_source(data));
     
+    return 0;
 }
 
 int punch_cue_handler(const char *path, const char *types, lo_arg ** argv,
@@ -360,8 +363,9 @@ int punch_cue_handler(const char *path, const char *types, lo_arg ** argv,
     deck_cue(de, q);
     
     /* send OK to xwax-client. TODO: check if deck really exists */
-    osc_send_ok(lo_message_get_source(data), de);
+    osc_send_ok(lo_message_get_source(data));
     
+    return 0;
 }
 
 int get_status_handler(const char *path, const char *types, lo_arg ** argv,
@@ -383,12 +387,13 @@ int get_status_handler(const char *path, const char *types, lo_arg ** argv,
     
     //printf("%s\n", url);
     
-    osc_send_ok(lo_message_get_source(data), d);
+    osc_send_ok(lo_message_get_source(data));
     osc_send_status(a, d);
     
+    return 0;
 }
 
-int osc_send_ok(lo_address a, int d)
+int osc_send_ok(lo_address a)
 {
     /* send a message to /xwax/cmdstate */
     if (lo_send(a, "/xwax/cmdstate", "i", 0) == -1) {
@@ -479,7 +484,7 @@ int disconnect_handler(const char *path, const char *types, lo_arg ** argv,
     pl->timecode_control = false;
     
     /* send OK to xwax-client. TODO: check if deck really exists */
-    osc_send_ok(lo_message_get_source(data), argv[0]->i);
+    osc_send_ok(lo_message_get_source(data));
     
     return 0;
 }
@@ -498,7 +503,26 @@ int reconnect_handler(const char *path, const char *types, lo_arg ** argv,
     pl->timecode_control = true;
     
     /* send OK to xwax-client. TODO: check if deck really exists */
-    osc_send_ok(lo_message_get_source(data), de);
+    osc_send_ok(lo_message_get_source(data));
+    
+    return 0;
+}
+
+int cycle_timecode_handler(const char *path, const char *types, lo_arg ** argv,
+                int argc, void *data, void *user_data)
+{
+    /* example showing pulling the argument values out of the argv array */
+    printf("%s <- deck:%i\n", path, argv[0]->i);
+    fflush(stdout);
+    
+    struct deck *de;
+    struct timecoder *tc;
+    de = &osc_deck[argv[0]->i];
+    tc = &de->timecoder;
+    timecoder_cycle_definition(tc);
+    
+    /* send OK to xwax-client. TODO: check if deck really exists */
+    osc_send_ok(lo_message_get_source(data));
     
     return 0;
 }
@@ -516,7 +540,7 @@ int recue_handler(const char *path, const char *types, lo_arg ** argv,
     deck_recue(de);
     
     /* send OK to xwax-client. TODO: check if deck really exists */
-    osc_send_ok(lo_message_get_source(data), de);
+    osc_send_ok(lo_message_get_source(data));
 
     return 0;
 }
@@ -554,7 +578,6 @@ int connect_handler(const char *path, const char *types, lo_arg ** argv,
         osc_send_track_load(de);
         osc_send_ppm_block(pl->track);
     }
-        
     
     return 0;
 }
@@ -574,7 +597,7 @@ int position_handler(const char *path, const char *types, lo_arg ** argv,
     player_seek_to(pl, argv[1]->f);
     
     /* send OK to xwax-client. TODO: check if deck really exists */
-    osc_send_ok(lo_message_get_source(data), de);
+    osc_send_ok(lo_message_get_source(data));
     
     return 0;
 }

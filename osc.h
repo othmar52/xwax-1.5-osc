@@ -52,7 +52,9 @@ int recue_handler(const char *path, const char *types, lo_arg ** argv,
 int disconnect_handler(const char *path, const char *types, lo_arg ** argv,
                 int argc, void *data, void *user_data); 
 int reconnect_handler(const char *path, const char *types, lo_arg ** argv,
-                int argc, void *data, void *user_data);                 
+                int argc, void *data, void *user_data);
+int cycle_timecode_handler(const char *path, const char *types, lo_arg ** argv,
+                int argc, void *data, void *user_data);
 int connect_handler(const char *path, const char *types, lo_arg ** argv,
                 int argc, void *data, void *user_data);                
 int position_handler(const char *path, const char *types, lo_arg ** argv,
@@ -70,7 +72,7 @@ int osc_send_ppm_block(struct track *tr);
 int osc_send_scale(int scale);
 int osc_send_status(lo_address a, int d);
 int osc_send_error(lo_address a, int d);
-int osc_send_ok(lo_address a, int d);
+int osc_send_ok(lo_address a);
 
 void osc_start_updater_thread();
 void osc_start_updater();

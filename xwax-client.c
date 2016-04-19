@@ -225,6 +225,25 @@ int osc_send_reconnect(char *server, int d)
     return 0;
 }
 
+int osc_send_cycle_timecode(char *server, int d)
+{
+    osc_start_server();
+    lo_address t = lo_address_new(server, "7770");
+    
+    if (lo_send(t, "/xwax/cycle_timecode", "i", d) == -1) {
+        fprintf(stderr, "OSC cycle_timecode error %d: %s\n", lo_address_errno(t),
+            lo_address_errstr(t));
+        return 1;
+    }
+    
+    while (!done) {
+        usleep(1000);
+    }
+    lo_server_thread_free(st);
+    
+    return 0;
+}
+
 int osc_send_recue(char *server, int d)
 {
 	osc_start_server();
@@ -254,7 +273,8 @@ static void usage(FILE *fd)
             "<cue-number>\n"
             "xwax-client <server> recue <deck-number>\n"
             "xwax-client <server> disconnect <deck-number>\n"
-            "xwax-client <server> reconnect <deck-number>\n"              
+            "xwax-client <server> reconnect <deck-number>\n"
+            "xwax-client <server> cycle_timecode <deck-number>\n"
             "xwax-client <server> get_status <deck-number>\n"
             "xwax-client <server> position <deck-number> <position>\n");
 }
@@ -354,7 +374,19 @@ int main(int argc, char *argv[])
                 
         server = argv[1];
         d = atoi(argv[3]);
-        return osc_send_reconnect(server, d);        
+        return osc_send_reconnect(server, d);
+    }else if(strcmp(argv[2], "cycle_timecode") == 0) {
+        if (argc < 4) {
+            usage(stderr);
+            return 0;
+        }
+        
+        int d;
+        char *server;
+        
+        server = argv[1];
+        d = atoi(argv[3]);
+        return osc_send_cycle_timecode(server, d);
     }else if(strcmp(argv[2], "recue") == 0) {
         if (argc < 4) {
             usage(stderr);
