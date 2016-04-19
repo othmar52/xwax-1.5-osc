@@ -788,7 +788,7 @@ static void draw_overview(SDL_Surface *surface, const struct rect *rect,
     Uint8 *pixels, *p;
     SDL_Color col;
 
-    x = CLOCKS_WIDTH;
+    x = rect->x + CLOCKS_WIDTH;
     y = SPACER;
     w = rect->w - CLOCKS_WIDTH - SPINNER_SIZE - SPINNER_SIZE - 5*SPACER;
     h = SPINNER_SIZE;
